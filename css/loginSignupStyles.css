@@ -106,6 +106,13 @@ form button:hover{
     color: var(--azul);
 }
 
+.contenedorErrores{
+    margin-top: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
 .errores{
     color: red;
     margin-top: 3px;

@@ -114,6 +114,7 @@ main h2 {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 3px;
 }
 
 .tareas-pendientes .tarea i {
@@ -125,6 +126,10 @@ main h2 {
 
 .tareas-pendientes .tarea button {
     border-radius: 50vh;
+    font-size: 16px;
+    border: 2px solid;
+    padding: 2px;
+    width: calc(30% / 3);
 }
 
 .tareas-pendientes .tarea button:hover i {
@@ -196,12 +201,12 @@ main h2 {
     flex-grow: 1;
 }
 
-.tareas-terminadas .tarea .descripcion button {
+.borrar{
     font-size: .9rem;
-    color: white;
     margin-left: .6rem;
     padding: .4rem;
     border-radius: .3rem;
+    border: 2px solid;
 }
 
 .tareas-terminadas .tarea .cambios-estados button:hover {
@@ -234,3 +239,4 @@ footer {
 footer img {
     height: 100%;
 }
+

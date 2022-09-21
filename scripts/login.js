@@ -38,6 +38,8 @@ window.addEventListener("load", function () {
         if (respuesta.jwt) {
           localStorage.setItem("jwt", respuesta.jwt);
           location.replace("/mis-tareas.html");
+        }else{
+          alert('El usuario no existe, revise los datos ingresados')
         }
       });
   }

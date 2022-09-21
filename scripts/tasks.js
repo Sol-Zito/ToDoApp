@@ -1,6 +1,5 @@
-// SEGURIDAD: Si no se encuentra en localStorage info del usuario
-// no lo deja acceder a la página, redirigiendo al login inmediatamente.
-// usamos el replace para no guardar en el historial la url anterior
+const url = 'https://ctd-todo-api.herokuapp.com/v1'
+const apiUrlTarea = `${url}/tasks`;
 
 const jwt = localStorage.getItem("jwt");
 if (!jwt) {
@@ -10,9 +9,8 @@ if (!jwt) {
 
 /* ------ comienzan las funcionalidades una vez que carga el documento ------ */
 window.addEventListener("load", function () {
-  /* ---------------- variables globales y llamado a funciones ---------------- */
   const btnCerrarSesion = document.getElementById('closeApp')
-
+  consultarTareas();
 
   /* -------------------------------------------------------------------------- */
   /*                          FUNCIÓN 1 - Cerrar sesión                         */
@@ -31,7 +29,7 @@ window.addEventListener("load", function () {
   /* -------------------------------------------------------------------------- */
 
   function obtenerNombreUsuario() {
-    const api = 'https://ctd-todo-api.herokuapp.com/v1/users/getMe'; 
+    const api = `${url}/users/getMe`;
 
     const getting = {
       method: "GET",
@@ -44,14 +42,10 @@ window.addEventListener("load", function () {
     fetch(api, getting)
       .then(response => response.json())
       .then(dataUsuario => {
-        console.log('data del usuario', dataUsuario);
         let resultado = dataUsuario
-        const nombreUsuario = resultado.firstName;
-        const apellidoUsuario = resultado.lastName
-        const pNombre = document.querySelector('div.user-info p'); 
-        pNombre.innerText = `${nombreUsuario} ${apellidoUsuario}`;
+        const pNombre = document.querySelector('div.user-info p');
+        pNombre.innerText = `${resultado.firstName} ${resultado.lastName}`;
       });
-
   }
 
   obtenerNombreUsuario()
@@ -60,31 +54,42 @@ window.addEventListener("load", function () {
   /*                 FUNCIÓN 3 - Obtener listado de tareas [GET]                */
   /* -------------------------------------------------------------------------- */
 
+
   function consultarTareas() {
-    
+    const getting = {
+      method: "GET",
+      headers: {
+        'Content-Type': "application/json",
+        "Authorization": jwt
+      }
+    }
+
+    fetch(apiUrlTarea, getting)
+      .then(response => response.json())
+      .then(data => {
+        data.sort((a, b) => a.id - b.id)
+        renderizarTareas(data)
+      })
+
   }
+
 
   /* -------------------------------------------------------------------------- */
   /*                    FUNCIÓN 4 - Crear nueva tarea [POST]                    */
   /* -------------------------------------------------------------------------- */
-  
+
   const formCrearTarea = document.forms[0];
   const inputTarea = document.getElementById('nuevaTarea');
-  let localTareas = 'tareas';
-  let arrTareas = localStorage.getItem(localTareas) ? JSON.parse(localStorage.getItem(localTareas)) : [];
 
   formCrearTarea.addEventListener("submit", function (event) {
     event.preventDefault()
-    const apiUrlTarea = 'https://ctd-todo-api.herokuapp.com/v1/tasks';
-
     if (inputTarea.value) {
 
-      
       const infoTarea = {
         description: inputTarea.value,
         completed: false,
       }
-      
+
       const configuracionTarea = {
         method: 'POST',
         headers: {
@@ -93,54 +98,210 @@ window.addEventListener("load", function () {
         },
         body: JSON.stringify(infoTarea),
       }
-      
+
       fetch(apiUrlTarea, configuracionTarea)
-      .then( respuesta => respuesta.json())
-      .then( data => {
-        console.log('data de la tarea', data);
-      })
-      
-      arrTareas.push(infoTarea.description);
-
-      inputTarea.value = ''
+        .then(respuesta => respuesta.json())
+        .then(data => {
+          inputTarea.value = '';
+          inputTarea.focus();
+          mostrarNuevaTarea(data);
+        })
     }
-
-    localStorage.setItem(localTareas, JSON.stringify(arrTareas));
-    
-    renderizarTareas(arrTareas)
   });
-  
+
   /* -------------------------------------------------------------------------- */
   /*                  FUNCIÓN 5 - Renderizar tareas en pantalla                 */
   /* -------------------------------------------------------------------------- */
-  const contenedorTareas =  document.getElementsByClassName('tareas-pendientes')[0];
-  
-  if (arrTareas.length > 0) {
-    arrTareas.forEach(el => {
-      addTarea(el);
-    })
-  } 
-  
-  function renderizarTareas(listado) { 
-    
-    addTarea(listado[listado.length -1 ] )
 
+  function renderizarTareas(listado) {
+    const { contenedorTareasPendientes, contenedorTareasTerminadas, cantFinalizadas } = obtenerContenedores();
+
+    let tareasFinalizadas = 0;
+
+    for (let i = 0; i < listado.length; i++) {
+      const {
+        contenedorTarea,
+        description,
+        tiempoCreacion,
+        btnCambioEstado,
+        btnBorrarTarea
+      } = crearElementos(listado[i]);
+
+      if (listado[i].completed) {
+        tareasFinalizadas++;
+        cantFinalizadas.innerText = tareasFinalizadas;
+        contenedorTarea.classList.add('hecha');
+        contenedorTareasTerminadas.appendChild(contenedorTarea);
+        contenedorTarea.append(description, tiempoCreacion, btnBorrarTarea);
+
+      } else {
+        contenedorTarea.classList.add('incompleta');
+        contenedorTareasPendientes.appendChild(contenedorTarea);
+        contenedorTarea.append(description, tiempoCreacion, btnCambioEstado, btnBorrarTarea);
+      }
+
+    }
   }
-  function addTarea(element) {
-    let tarea = document.createElement('li');
-    tarea.classList.add('tarea')
-    tarea.innerText = element;
-    contenedorTareas.appendChild(tarea);
+
+  function mostrarNuevaTarea(tarea) {
+    const contenedorTareasPendientes = document.getElementsByClassName('tareas-pendientes')[0];
+
+    const {
+      contenedorTarea,
+      description,
+      tiempoCreacion,
+      btnCambioEstado,
+      btnBorrarTarea
+    } = crearElementos(tarea);
+
+    contenedorTarea.classList.add('incompleta');
+    contenedorTareasPendientes.appendChild(contenedorTarea);
+    contenedorTarea.append(description, tiempoCreacion, btnCambioEstado, btnBorrarTarea);
   }
-  
-  
+
+  function actualizarListados(tarea) {
+    const { contenedorTareasPendientes, contenedorTareasTerminadas, cantFinalizadas } = obtenerContenedores();
+
+    const elementoABorrar = contenedorTareasPendientes.querySelector(`#nro-${tarea.id}`);
+
+    let tareasFinalizadas = +cantFinalizadas.innerText;
+
+    const {
+      contenedorTarea,
+      description,
+      tiempoCreacion,
+      btnCambioEstado,
+      btnBorrarTarea
+    } = crearElementos(tarea);
+
+    tareasFinalizadas++;
+    cantFinalizadas.innerText = tareasFinalizadas;
+    contenedorTarea.classList.add('hecha');
+    contenedorTareasTerminadas.appendChild(contenedorTarea);
+    contenedorTarea.append(description, tiempoCreacion, btnBorrarTarea);
+
+    contenedorTareasPendientes.removeChild(elementoABorrar);
+  }
+
+  function crearElementos(item) {
+    const fecha = new Date(item.createdAt);
+
+    const contenedorTarea = document.createElement('li');
+    contenedorTarea.classList.add('tarea');
+    contenedorTarea.setAttribute('id', `nro-${item.id}`)
+
+    const description = document.createElement('span');
+    description.classList.add('descripcion')
+    description.innerText = item.description;
+
+    const tiempoCreacion = document.createElement('p');
+    tiempoCreacion.classList.add('timestamp');
+    tiempoCreacion.innerText = fecha.toLocaleDateString();
+
+    const btnCambioEstado = document.createElement('button');
+    btnCambioEstado.classList.add('cambios-estado');
+    btnCambioEstado.innerText = 'Tarea realizada';
+    btnCambioEstado.onclick = (event) => botonesCambioEstado(event);
+
+    const btnBorrarTarea = document.createElement('button');
+    btnBorrarTarea.classList.add('borrar');
+    btnBorrarTarea.innerText = 'Borrar tarea';
+    btnBorrarTarea.onclick = (event) => botonBorrarTarea(event);
+
+    return {
+      contenedorTarea,
+      description,
+      tiempoCreacion,
+      btnCambioEstado,
+      btnBorrarTarea
+    }
+  }
+
+  function obtenerContenedores() {
+    const contenedorTareasPendientes = document.getElementsByClassName('tareas-pendientes')[0];
+    const contenedorTareasTerminadas = document.getElementsByClassName('tareas-terminadas')[0];
+    const cantFinalizadas = document.getElementById('cantidad-finalizadas');
+
+    return {
+      contenedorTareasPendientes,
+      contenedorTareasTerminadas,
+      cantFinalizadas
+    }
+  }
   /* -------------------------------------------------------------------------- */
   /*                  FUNCIÓN 6 - Cambiar estado de tarea [PUT]                 */
   /* -------------------------------------------------------------------------- */
-  function botonesCambioEstado() { }
+
+
+  function botonesCambioEstado(event) {
+
+    const tareaRealizada = confirm('Esta tarea ya ha sido realizada?')
+    if(tareaRealizada){
+
+      const idTarea = event.target.parentNode.id.split('-')[1];
+      const urlTasksId = apiUrlTarea + '/' + idTarea;
+  
+      const infoTarea = {
+        completed: true,
+      }
+  
+      const configuracionTarea = {
+        method: 'PUT',
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": jwt,
+        },
+        body: JSON.stringify(infoTarea),
+      }
+  
+      fetch(urlTasksId, configuracionTarea)
+        .then(response => response.json())
+        .then(data => {
+          actualizarListados(data);
+        })
+    }
+
+  }
 
   /* -------------------------------------------------------------------------- */
   /*                     FUNCIÓN 7 - Eliminar tarea [DELETE]                    */
   /* -------------------------------------------------------------------------- */
-  function botonBorrarTarea() { }
+  function botonBorrarTarea(event) {
+    let eliminarTarea = confirm('Desea eliminar la tarea?')
+
+    if (eliminarTarea) {
+
+      const idTarea = event.target.parentNode.id.split('-')[1];
+      const elementoABorrarD = event.target.parentNode;
+
+      const elementoContenedor = event.target.parentNode.parentNode;
+
+      const urlTasksId = apiUrlTarea + '/' + idTarea;
+
+      const configuracionTarea = {
+        method: 'DELETE',
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": jwt,
+        },
+      }
+
+      fetch(urlTasksId, configuracionTarea)
+        .then(response => {
+          elementoContenedor.removeChild(elementoABorrarD);
+          if (elementoContenedor.classList.contains('tareas-terminadas')) {
+            const cantFinalizadas = document.getElementById('cantidad-finalizadas');
+            cantFinalizadas.innerText = elementoContenedor.childElementCount;
+          }
+          return response.json()
+
+        })
+        .then(data => {
+
+          alert(data)
+         
+        })
+    }
+
+  }
 });

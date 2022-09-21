@@ -24,20 +24,30 @@ window.addEventListener("load", function () {
         let mensaje = 'El nombre y/o apellido deben estar completos';
         arrErrores.push(mensaje);
       }
+      if (inputNombre.value == '' || inputApellido.value == '') {
+        let mensaje = 'El nombre y/o apellido deben estar completos';
+        arrErrores.push(mensaje);
+      }
       if (inputPassword.value != inputPasswordRepetida.value) {
         let mensaje = 'La contraseña y la repeticion, no coinciden';
         arrErrores.push(mensaje);
       }
+      if (inputEmail.value.indexOf('@') == -1) {
+        let mensaje = 'Ingrese correctamente su email.  Ejemplo: "nombreapelido@correo.com';
+        arrErrores.push(mensaje);
+      }
     }
 
+    const contenedorErrores = document.createElement('div');
+    contenedorErrores.classList.add('contenedorErrores');
 
     if (arrErrores.length > 0) {
       for (let i = 0; i < arrErrores.length; i++) {
         const errores = document.createElement('p');
         errores.classList.add('errores')
         errores.innerText = arrErrores[i];
-        form.append(errores)
-
+        contenedorErrores.appendChild(errores)
+        form.append(contenedorErrores)
       }
     } else {
       let usuario = {
@@ -46,10 +56,7 @@ window.addEventListener("load", function () {
         email: inputEmail.value,
         password: inputPassword.value,
       }
-
-
       realizarRegister(usuario);
-
     }
 
   });
@@ -68,18 +75,16 @@ window.addEventListener("load", function () {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(settings),
-    }; 
+    };
 
     fetch(apiURL, configuraciones)
       .then((respuesta) => respuesta.json())
       .then((respuesta) => {
         if (respuesta.jwt) {
-          
           localStorage.setItem("jwt", respuesta.jwt);
-
           location.replace("/mis-tareas.html");
         } else {
-          alert('El usuario ya existe')
+          alert('El usuario ya se encuentra registrado')
         }
       });
   }
