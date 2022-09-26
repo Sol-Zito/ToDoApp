@@ -7,6 +7,7 @@ if (!jwt) {
   location.replace("/index.html");
 }
 
+
 /* ------ comienzan las funcionalidades una vez que carga el documento ------ */
 window.addEventListener("load", function () {
   const btnCerrarSesion = document.getElementById('closeApp')
@@ -15,7 +16,7 @@ window.addEventListener("load", function () {
   /* -------------------------------------------------------------------------- */
   /*                          FUNCIÓN 1 - Cerrar sesión                         */
   /* -------------------------------------------------------------------------- */
-
+  const nueva13 = localStorage.setItem('nuevo', 'nuevo13')
   btnCerrarSesion.addEventListener('click', function () {
     let cerrarSesion = confirm('Esta seguro de que quiere salir?')
     if (cerrarSesion) {
