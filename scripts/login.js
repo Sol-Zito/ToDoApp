@@ -22,7 +22,9 @@ window.addEventListener("load", function () {
   /*                     FUNCIÓN 2: Realizar el login [POST]                    */
   /* -------------------------------------------------------------------------- */
   function realizarLogin(user) {
-    const apiURL = "https://ctd-todo-api.herokuapp.com/v1/users/login";
+    const apiURL = "https://ctd-fe2-todo-v2.herokuapp.com/v1/users/login";
+    
+
 
     const configuraciones = {
       method: "POST",
@@ -43,4 +45,5 @@ window.addEventListener("load", function () {
         }
       });
   }
+  
 });

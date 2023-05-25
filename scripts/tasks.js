@@ -1,4 +1,4 @@
-const url = 'https://ctd-todo-api.herokuapp.com/v1'
+const url = 'https://ctd-fe2-todo-v2.herokuapp.com/v1'
 const apiUrlTarea = `${url}/tasks`;
 
 const jwt = localStorage.getItem("jwt");
@@ -153,7 +153,7 @@ window.addEventListener("load", function () {
       tiempoCreacion,
       btnCambioEstado,
       btnBorrarTarea
-    } = crearElementos(tarea);
+    } =  (tarea);
 
     contenedorTarea.classList.add('incompleta');
     contenedorTareasPendientes.appendChild(contenedorTarea);
